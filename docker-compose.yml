@@ -1,0 +1,70 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: aegis_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-aegis}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-aegis_dev_password}
+      POSTGRES_DB: ${DB_NAME:-aegis}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - aegis_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: aegis_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - aegis_network
+
+  api:
+    build:
+      context: .
+      dockerfile: docker/api/Dockerfile
+    container_name: aegis_api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${DB_USER:-aegis}:${DB_PASSWORD:-aegis_dev_password}@postgres:5432/${DB_NAME:-aegis}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      SECRET_KEY: ${SECRET_KEY:-aegis_super_secret_jwt_key_development_32chars_min_length_ok}
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - aegis_network
+
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: ../../docker/web/Dockerfile
+    container_name: aegis_web
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+    depends_on:
+      - api
+    networks:
+      - aegis_network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  aegis_network:
+    driver: bridge
