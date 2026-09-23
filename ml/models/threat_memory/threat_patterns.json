@@ -1,0 +1,62 @@
+[
+  {
+    "pattern_id": "TP_MULE_FANOUT_001",
+    "pattern_type": "FAN_OUT_DISPERSAL",
+    "account_id": "ACC_HIST_901",
+    "risk_score": 94.0,
+    "confirmed_status": "TRUE_POSITIVE",
+    "feature_signature": [
+      25.0,
+      5500.0,
+      1200.0,
+      0.98,
+      8.0,
+      14.5,
+      3.2,
+      0.45
+    ],
+    "topology_description": "One master accumulator dispersing across 8 mule accounts in under 2 hours.",
+    "analyst_notes": "Confirmed money mule recruitment syndicate.",
+    "created_at": "2026-09-23T13:00:36.820567+00:00"
+  },
+  {
+    "pattern_id": "TP_MULE_PASSTHROUGH_002",
+    "pattern_type": "RAPID_PASSTHROUGH",
+    "account_id": "ACC_HIST_902",
+    "risk_score": 89.5,
+    "confirmed_status": "TRUE_POSITIVE",
+    "feature_signature": [
+      18.0,
+      4800.0,
+      600.0,
+      0.99,
+      4.0,
+      9.2,
+      2.1,
+      0.2
+    ],
+    "topology_description": "Immediate passthrough of wire transfers to peer-to-peer payout wallets.",
+    "analyst_notes": "Classic funnel account.",
+    "created_at": "2026-09-23T13:00:36.820593+00:00"
+  },
+  {
+    "pattern_id": "TP_LEGIT_PAYROLL_FP_003",
+    "pattern_type": "PAYROLL_BATCH",
+    "account_id": "ACC_HIST_903",
+    "risk_score": 35.0,
+    "confirmed_status": "FALSE_POSITIVE",
+    "feature_signature": [
+      120.0,
+      2200.0,
+      800.0,
+      4.5,
+      45.0,
+      30.0,
+      1.8,
+      0.05
+    ],
+    "topology_description": "Corporate payroll disbursement on 1st of month.",
+    "analyst_notes": "Legitimate business salary disbursements. Verified payroll company.",
+    "created_at": "2026-09-23T13:00:36.820600+00:00"
+  }
+]

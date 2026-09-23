@@ -1,6 +1,14 @@
 """
 AEGIS - FastAPI Main Application
 """
+import os
+import sys
+
+# Ensure root aegis directory and ml packages are in sys.path
+root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+if root_dir not in sys.path:
+    sys.path.insert(0, root_dir)
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings

@@ -11,9 +11,9 @@ import {
   ArrowLeftRight,
   Share2,
   Upload,
+  FolderKanban,
   LogOut,
   Activity,
-  CheckCircle2,
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -34,8 +34,9 @@ export function Sidebar({ onCloseMobile }: SidebarProps) {
       ],
     },
     {
-      group: "Intelligence",
+      group: "Intelligence & Investigation",
       items: [
+        { label: "Cases & Investigation", href: "/cases", icon: FolderKanban, badge: "Dossier" },
         { label: "Monitored Accounts", href: "/accounts", icon: Users },
         { label: "Transaction Ledger", href: "/transactions", icon: ArrowLeftRight },
         { label: "Graph Network", href: "/graph", icon: Share2 },
@@ -121,7 +122,7 @@ export function Sidebar({ onCloseMobile }: SidebarProps) {
                     </div>
 
                     {item.badge && (
-                      <span className="text-[10px] px-1.5 py-0.2 rounded-full font-mono bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                      <span className="text-[10px] px-1.5 py-0.2 rounded-full font-mono bg-blue-500/10 text-blue-400 border border-blue-500/20">
                         {item.badge}
                       </span>
                     )}

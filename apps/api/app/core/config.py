@@ -38,7 +38,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
-    ALLOWED_ORIGINS: list[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
+    ALLOWED_ORIGINS: list[str] | str = ["http://localhost:3000", "http://127.0.0.1:3000"]
     MAX_UPLOAD_SIZE_MB: int = 250
     UPLOAD_DIR: str = "uploads"
 
@@ -50,7 +50,14 @@ class Settings(BaseSettings):
     @classmethod
     def parse_origins(cls, v: Any) -> list[str]:
         if isinstance(v, str):
-            return [origin.strip() for origin in v.split(",")]
+            v = v.strip()
+            if v.startswith("[") and v.endswith("]"):
+                import json
+                try:
+                    return json.loads(v)
+                except Exception:
+                    pass
+            return [origin.strip() for origin in v.split(",") if origin.strip()]
         return v
 
     @property
