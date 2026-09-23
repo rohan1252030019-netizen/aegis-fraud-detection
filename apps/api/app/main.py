@@ -9,10 +9,21 @@ root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "
 if root_dir not in sys.path:
     sys.path.insert(0, root_dir)
 
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.api.v1 import api_router
+from app.db.database import engine
+from app.db.base import Base
+import app.models  # register models
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    yield
 
 
 def create_app() -> FastAPI:
@@ -22,6 +33,7 @@ def create_app() -> FastAPI:
         version="1.0.0",
         docs_url="/docs",
         redoc_url="/redoc",
+        lifespan=lifespan,
     )
 
     app.add_middleware(

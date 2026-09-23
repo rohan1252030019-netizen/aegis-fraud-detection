@@ -11,13 +11,17 @@ import {
   AlertCircle,
   FileText,
   Download,
-  ShieldCheck,
-  Zap,
-  Layers,
-  Sparkles,
   ArrowRight,
-  X,
 } from "lucide-react";
+
+interface PipelineExecutionMetrics {
+  transactions_processed: number;
+  accounts_analyzed: number;
+  anomalies_detected: number;
+  suspicious_networks: number;
+  verified_alerts: number;
+  cases_generated: number;
+}
 
 export default function DataImportPage() {
   const [file, setFile] = useState<File | null>(null);
@@ -25,6 +29,7 @@ export default function DataImportPage() {
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [resultMetrics, setResultMetrics] = useState<PipelineExecutionMetrics | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -71,23 +76,26 @@ export default function DataImportPage() {
     setProgress(20);
     setStatus(null);
     setError(null);
+    setResultMetrics(null);
 
     const formData = new FormData();
     formData.append("file", file);
 
     try {
-      // Simulate progress progression for seamless feedback
       const progressTimer = setInterval(() => {
         setProgress((prev) => (prev < 90 ? prev + 15 : prev));
       }, 300);
 
-      await api.post("/upload", formData, {
+      const res = await api.post("/upload", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
       clearInterval(progressTimer);
       setProgress(100);
-      setStatus(`Successfully processed "${file.name}". Ingestion and multi-layer analysis executed.`);
+      setStatus(res.data?.summary || `Successfully processed "${file.name}". Ingestion and multi-layer analysis executed.`);
+      if (res.data?.metrics) {
+        setResultMetrics(res.data.metrics);
+      }
       setFile(null);
     } catch (err) {
       setError(getErrorMessage(err));
@@ -99,8 +107,8 @@ export default function DataImportPage() {
   return (
     <div className="space-y-6 max-w-4xl">
       <PageHeader
-        title="Data Ingestion & Pipeline"
-        description="Upload batch transaction logs (CSV, JSON) to execute multi-layer fraud detection, graph clustering, and behavioral ML profiling."
+        title="Data Ingestion"
+        description="Upload transaction data (CSV/JSON) to run AEGIS temporal, behavioral, graph-based, and evidence-fusion detection."
       />
 
       {status && (
@@ -137,11 +145,63 @@ export default function DataImportPage() {
         </div>
       )}
 
+      {/* Real Pipeline Result Summary (Only displayed when real execution metrics return from backend) */}
+      {resultMetrics && (
+        <Card className="border-border/70 p-4 bg-muted/10">
+          <div className="flex items-center justify-between mb-3 border-b border-border/40 pb-2">
+            <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider">
+              Pipeline Result Summary
+            </h4>
+            <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+              Execution Verified
+            </span>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div className="p-2.5 rounded bg-muted/40 border border-border/30">
+              <span className="text-[10px] text-muted-foreground block font-mono">Transactions Processed</span>
+              <span className="text-base font-semibold font-mono text-foreground">
+                {resultMetrics.transactions_processed.toLocaleString()}
+              </span>
+            </div>
+            <div className="p-2.5 rounded bg-muted/40 border border-border/30">
+              <span className="text-[10px] text-muted-foreground block font-mono">Accounts Analyzed</span>
+              <span className="text-base font-semibold font-mono text-foreground">
+                {resultMetrics.accounts_analyzed.toLocaleString()}
+              </span>
+            </div>
+            <div className="p-2.5 rounded bg-muted/40 border border-border/30">
+              <span className="text-[10px] text-muted-foreground block font-mono">Anomalies Detected</span>
+              <span className="text-base font-semibold font-mono text-rose-400">
+                {resultMetrics.anomalies_detected.toLocaleString()}
+              </span>
+            </div>
+            <div className="p-2.5 rounded bg-muted/40 border border-border/30">
+              <span className="text-[10px] text-muted-foreground block font-mono">Suspicious Networks</span>
+              <span className="text-base font-semibold font-mono text-amber-400">
+                {resultMetrics.suspicious_networks.toLocaleString()}
+              </span>
+            </div>
+            <div className="p-2.5 rounded bg-muted/40 border border-border/30">
+              <span className="text-[10px] text-muted-foreground block font-mono">Verified Alerts</span>
+              <span className="text-base font-semibold font-mono text-orange-400">
+                {resultMetrics.verified_alerts.toLocaleString()}
+              </span>
+            </div>
+            <div className="p-2.5 rounded bg-muted/40 border border-border/30">
+              <span className="text-[10px] text-muted-foreground block font-mono">Cases Generated</span>
+              <span className="text-base font-semibold font-mono text-cyan-400">
+                {resultMetrics.cases_generated.toLocaleString()}
+              </span>
+            </div>
+          </div>
+        </Card>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Upload Form Card (2 cols) */}
         <Card className="lg:col-span-2 border-border/70">
           <CardHeader className="pb-4">
-            <CardTitle className="text-sm font-semibold">Upload Batch Transaction File</CardTitle>
+            <CardTitle className="text-sm font-semibold">Upload Transaction Dataset</CardTitle>
             <CardDescription>
               Supported formats: Comma-separated (.csv) or JSON records (.json). Max batch size: 250MB.
             </CardDescription>
@@ -224,7 +284,7 @@ export default function DataImportPage() {
                   loading={uploading}
                   className="flex-1 h-9 text-xs"
                 >
-                  {uploading ? "Analyzing Multi-Layer Matrix..." : "Run Detection Pipeline"}
+                  {uploading ? "Running AEGIS Detection Pipeline..." : "Run AEGIS Detection Pipeline"}
                 </Button>
                 {file && !uploading && (
                   <Button
@@ -241,7 +301,7 @@ export default function DataImportPage() {
           </CardContent>
         </Card>
 
-        {/* Schema Reference & Helper Card (1 col) */}
+        {/* Schema Reference & Helper Cards (1 col) */}
         <div className="space-y-4">
           <Card className="border-border/70">
             <CardHeader className="pb-3">
@@ -260,18 +320,18 @@ export default function DataImportPage() {
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className="space-y-2.5 text-xs">
+            <CardContent className="space-y-3 text-xs">
               <p className="text-muted-foreground leading-relaxed text-[11px]">
-                Your file must contain the following columns for algorithmic ingestion:
+                Your file must contain the following required fields for AEGIS ingestion:
               </p>
               <div className="space-y-1.5 font-mono text-[11px]">
                 {[
-                  { name: "transaction_id", type: "string", req: "Required" },
-                  { name: "sender_account_id", type: "string", req: "Required" },
-                  { name: "receiver_account_id", type: "string", req: "Required" },
-                  { name: "amount", type: "float", req: "Required" },
-                  { name: "currency", type: "string", req: "Optional" },
-                  { name: "timestamp", type: "ISO-8601", req: "Required" },
+                  { name: "transaction_id", type: "string" },
+                  { name: "sender_account_id", type: "string" },
+                  { name: "receiver_account_id", type: "string" },
+                  { name: "amount", type: "float" },
+                  { name: "currency", type: "string" },
+                  { name: "timestamp", type: "ISO-8601" },
                 ].map((col) => (
                   <div
                     key={col.name}
@@ -282,25 +342,91 @@ export default function DataImportPage() {
                   </div>
                 ))}
               </div>
+
+              {/* Visually Subtle Optional Enrichment Section */}
+              <div className="pt-2.5 border-t border-border/40">
+                <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
+                  Optional Enrichment
+                </div>
+                <div className="grid grid-cols-2 gap-1.5 font-mono text-[10px]">
+                  {[
+                    "transaction_type",
+                    "beneficiary_id",
+                    "merchant_id",
+                    "device_id",
+                    "ip_address",
+                    "location",
+                    "channel",
+                    "account_balance",
+                  ].map((field) => (
+                    <div
+                      key={field}
+                      className="flex items-center justify-between px-2 py-1 rounded bg-muted/20 border border-border/30 text-muted-foreground"
+                    >
+                      <span>{field}</span>
+                      <span className="text-[9px] text-muted-foreground/60">optional</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </CardContent>
           </Card>
 
-          {/* Pipeline Verification checklist */}
+          {/* Automated Checks Triggered */}
           <Card className="border-border/70 p-4">
-            <h4 className="text-xs font-semibold text-foreground mb-2">Automated Checks Triggered</h4>
+            <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider mb-2.5">
+              Automated Checks Triggered
+            </h4>
             <div className="space-y-2 text-[11px] text-muted-foreground">
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span>Zero-loss transaction indexing</span>
+                <span>Transaction validation & normalization</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span>Smurfing & structuring detection</span>
+                <span>Temporal anomaly detection</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span>Directed acyclic graph update</span>
+                <span>Behavioral anomaly profiling</span>
               </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <span>Transaction relationship graph construction</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <span>Multi-pattern correlation</span>
+              </div>
+            </div>
+          </Card>
+
+          {/* AEGIS Pipeline Coverage Architecture */}
+          <Card className="border-border/70 p-4">
+            <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider mb-2.5">
+              AEGIS Detection Pipeline Flow
+            </h4>
+            <div className="grid grid-cols-2 gap-1.5 font-mono text-[10px]">
+              {[
+                "1. Data Validation",
+                "2. Preprocessing",
+                "3. Temporal Detection",
+                "4. Behavioral Detection",
+                "5. Graph Correlation",
+                "6. Evidence Fusion",
+                "7. Explainability",
+                "8. Formal Verification",
+                "9. Threat Memory",
+                "10. Investigation Intel",
+              ].map((stage) => (
+                <div
+                  key={stage}
+                  className="px-2 py-1 rounded bg-muted/20 border border-border/30 text-muted-foreground/90 flex items-center gap-1.5"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400/80 shrink-0" />
+                  <span>{stage}</span>
+                </div>
+              ))}
             </div>
           </Card>
         </div>

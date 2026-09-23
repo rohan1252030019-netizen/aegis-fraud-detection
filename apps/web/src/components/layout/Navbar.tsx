@@ -65,7 +65,7 @@ export function Navbar({ onOpenMobileMenu }: NavbarProps) {
     "/accounts": "Monitored Accounts & Mules",
     "/transactions": "Real-time Transaction Ledger",
     "/graph": "Network Topology & Correlation",
-    "/data-import": "Data Ingestion & Ingestion Pipeline",
+    "/data-import": "Data Ingestion",
   };
 
   const currentTitle = routeTitles[pathname] || "Fraud Detection Console";
