@@ -10,7 +10,7 @@
 
 This report measures the empirical performance gains of the **AEGIS Biomimetic Multi-Layer Architecture** compared against traditional **Siloed Threshold AML Systems**. 
 
-Traditional transaction monitoring platforms analyze indicators in isolation (e.g. single transaction volume > $10k, daily volume spikes). As a result, sophisticated money-mule rings—which employ structured amounts below reporting ceilings, multi-hop conduit chains, and rapid passthroughs—consistently evade detection (yielding high False Negative Rates), while legitimate payroll and high-net-worth customers trigger excessive alerts (yielding high False Positive Rates).
+Traditional transaction monitoring platforms analyze indicators in isolation (e.g. single transaction volume > ₹10,000, daily volume spikes). As a result, sophisticated money-mule rings—which employ structured amounts below reporting ceilings, multi-hop conduit chains, and rapid passthroughs—consistently evade detection (yielding high False Negative Rates), while legitimate payroll and high-net-worth customers trigger excessive alerts (yielding high False Positive Rates).
 
 AEGIS resolves this fundamental limitation by combining:
 1. **Pre-processing Data Quality Verification** (zero dirty data ingestion)
@@ -74,7 +74,7 @@ Execution latency measured across all 9 pipelined stages (measured in millisecon
 ## 4. Key Architectural Discoveries
 
 1. **Elimination of Structuring Blind Spots**:
-   Traditional AML rules completely missed 100% of structured fan-in attacks because individual transaction amounts ($1,500 - $2,500) were deliberately kept below standard regulatory and rule thresholds. AEGIS Graph Correlation and Behavioral Isolation Forest flagged these with 100% sensitivity due to in-degree convergence and anomalous velocity per hour.
+   Traditional AML rules completely missed 100% of structured fan-in attacks because individual transaction amounts (₹1,500 - ₹2,500) were deliberately kept below standard regulatory and rule thresholds. AEGIS Graph Correlation and Behavioral Isolation Forest flagged these with 100% sensitivity due to in-degree convergence and anomalous velocity per hour.
 
 2. **Suppression of False Positives**:
    In traditional AML, high-volume legitimate business accounts triggered frequent false alarms due to raw volume. AEGIS Evidence Fusion $R = f(T, A, G, H, C)$ weighed the absence of graph cycles, normal send-receive ratios, and clean counterparty distributions, suppressing the false alarm score down to `NORMAL` / `MODERATE`.

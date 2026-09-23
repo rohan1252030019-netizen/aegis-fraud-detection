@@ -45,7 +45,7 @@ class Transaction(Base):
     sender_account_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     receiver_account_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     amount: Mapped[Decimal] = mapped_column(Numeric(20, 4), nullable=False)
-    currency: Mapped[str] = mapped_column(String(10), default="USD")
+    currency: Mapped[str] = mapped_column(String(10), default="INR")
     transaction_type: Mapped[str | None] = mapped_column(String(50), nullable=True)
     timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
     is_flagged: Mapped[bool] = mapped_column(Boolean, default=False, index=True)

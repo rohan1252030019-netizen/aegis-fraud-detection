@@ -107,7 +107,7 @@ class FormalVerificationEngine:
                         checks.append(VerificationCheck(
                             check_name="transaction_provenance_verified",
                             status="PASS",
-                            details=f"Transaction {tx_id} (amount=${rec['amount']}) verified in immutable ledger.",
+                            details=f"Transaction {tx_id} (amount=₹{rec['amount']}) verified in immutable ledger.",
                             evidence_id=item.evidence_id,
                             target_id=tx_id,
                         ))

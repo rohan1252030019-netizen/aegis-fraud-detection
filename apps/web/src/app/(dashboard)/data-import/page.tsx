@@ -48,10 +48,10 @@ export default function DataImportPage() {
   const downloadSampleCsv = () => {
     const csvContent =
       "transaction_id,sender_account_id,receiver_account_id,amount,currency,timestamp\n" +
-      "TXN_9001,ACC_1025,ACC_1001,15400.00,USD,2026-09-14T10:15:00Z\n" +
-      "TXN_9002,ACC_1025,ACC_1002,14800.00,USD,2026-09-14T10:18:00Z\n" +
-      "TXN_9003,ACC_1025,ACC_1003,16200.00,USD,2026-09-14T10:22:00Z\n" +
-      "TXN_9004,ACC_1001,ACC_2042,45000.00,USD,2026-09-14T11:00:00Z\n";
+      "TXN_9001,ACC_1025,ACC_1001,15400.00,INR,2026-09-14T10:15:00Z\n" +
+      "TXN_9002,ACC_1025,ACC_1002,14800.00,INR,2026-09-14T10:18:00Z\n" +
+      "TXN_9003,ACC_1025,ACC_1003,16200.00,INR,2026-09-14T10:22:00Z\n" +
+      "TXN_9004,ACC_1001,ACC_2042,45000.00,INR,2026-09-14T11:00:00Z\n";
 
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);

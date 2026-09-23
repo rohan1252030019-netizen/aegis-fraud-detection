@@ -160,7 +160,7 @@ def test_formal_verification_and_hallucination_detection():
     assert len(v_report_honest["unverified_transactions"]) == 0
     
     # 2. Adversarial hallucinated text claiming non-existent TX_FAKE_999 and non-existent ACC_99999
-    fake_text = "Account ACC_B engaged in laundering via TX_FAKE_999 transfer of $9999999 to foreign account ACC_99999."
+    fake_text = "Account ACC_B engaged in laundering via TX_FAKE_999 transfer of ₹9999999 to foreign account ACC_99999."
     v_report_fake = verifier.verify_llm_claims(fake_text, df, valid_accs)
     assert v_report_fake["is_grounded"] is False
     assert "TX_FAKE_999" in v_report_fake["unverified_transactions"]
