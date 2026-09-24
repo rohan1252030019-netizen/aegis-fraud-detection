@@ -216,20 +216,37 @@ export default function DashboardPage() {
           <CardContent>
             <div className="h-64 w-full pt-4">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={velocityData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <AreaChart data={velocityData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                   <defs>
                     <linearGradient id="txGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2} />
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.25} />
                       <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.0} />
                     </linearGradient>
                     <linearGradient id="flaggedGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#ef4444" stopOpacity={0.0} />
+                      <stop offset="5%" stopColor="#ef4444" stopOpacity={0.4} />
+                      <stop offset="95%" stopColor="#ef4444" stopOpacity={0.05} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
                   <XAxis dataKey="time" stroke="#71717a" fontSize={11} tickLine={false} />
-                  <YAxis stroke="#71717a" fontSize={11} tickLine={false} />
+                  {/* Primary Axis: Transactions Volume (0 - 6k) */}
+                  <YAxis
+                    yAxisId="left"
+                    stroke="#71717a"
+                    fontSize={11}
+                    tickLine={false}
+                    tickFormatter={(val) => (val >= 1000 ? `${(val / 1000).toFixed(0)}k` : val)}
+                  />
+                  {/* Secondary Axis: Flagged Anomalies (0 - 60) to eliminate line squashing */}
+                  <YAxis
+                    yAxisId="right"
+                    orientation="right"
+                    stroke="#f87171"
+                    fontSize={11}
+                    tickLine={false}
+                    domain={[0, 60]}
+                    tickFormatter={(val) => `${val}`}
+                  />
                   <Tooltip
                     contentStyle={{
                       backgroundColor: "#18181b",
@@ -240,6 +257,7 @@ export default function DashboardPage() {
                     }}
                   />
                   <Area
+                    yAxisId="left"
                     type="monotone"
                     dataKey="transactions"
                     name="Transactions"
@@ -249,13 +267,16 @@ export default function DashboardPage() {
                     fill="url(#txGradient)"
                   />
                   <Area
+                    yAxisId="right"
                     type="monotone"
                     dataKey="flagged"
                     name="Flagged Anomalies"
                     stroke="#ef4444"
-                    strokeWidth={2}
+                    strokeWidth={2.5}
                     fillOpacity={1}
                     fill="url(#flaggedGradient)"
+                    dot={{ r: 3, fill: "#ef4444", strokeWidth: 1, stroke: "#18181b" }}
+                    activeDot={{ r: 5, fill: "#ef4444", stroke: "#fff", strokeWidth: 2 }}
                   />
                 </AreaChart>
               </ResponsiveContainer>
@@ -263,11 +284,11 @@ export default function DashboardPage() {
             <div className="flex items-center justify-center gap-6 mt-3 text-xs text-muted-foreground border-t border-border/40 pt-3">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
-                <span>Legitimate Volume</span>
+                <span>Legitimate Volume (Left Axis)</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
-                <span>Flagged Deviations</span>
+                <span className="text-rose-400 font-medium">Flagged Deviations (Right Axis)</span>
               </div>
             </div>
           </CardContent>
