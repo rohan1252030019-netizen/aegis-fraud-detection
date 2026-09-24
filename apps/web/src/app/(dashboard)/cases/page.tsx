@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useRef } from "react";
 import { api, getErrorMessage } from "@/lib/api";
-import { MOCK_CASES } from "@/lib/mockData";
+import { MOCK_CASES, MOCK_INVESTIGATION_RESULT } from "@/lib/mockData";
 import {
   FolderKanban,
   ShieldCheck,
@@ -93,7 +93,7 @@ export default function CasesPage() {
   const [selectedCase, setSelectedCase] = useState<CaseItem | null>(MOCK_CASES[0] as any);
   const [investigating, setInvestigating] = useState(false);
   const [activeJob, setActiveJob] = useState<InvestigationJob | null>(null);
-  const [investigationData, setInvestigationData] = useState<any>(null);
+  const [investigationData, setInvestigationData] = useState<any>(MOCK_INVESTIGATION_RESULT);
   const [isCancelling, setIsCancelling] = useState(false);
   const [liveElapsedSeconds, setLiveElapsedSeconds] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -712,6 +712,14 @@ ${(investigationData.threat_memory_matches || [])
         </div>
         {selectedCase && (
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowExportModal(true)}
+              className="flex items-center gap-2 px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-sm font-medium transition-colors shadow-sm"
+              title="Export Mule Account Report in 6 formats (PDF, CSV, HTML, MD, TXT, JSON)"
+            >
+              <Download className="w-4 h-4 text-cyan-400" />
+              <span>Export Report</span>
+            </button>
             {investigating ? (
               <button
                 onClick={cancelInvestigation}
