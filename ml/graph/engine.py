@@ -143,14 +143,28 @@ class FinancialGraphEngine:
         # Pattern 4: Circular Fund Routing / Cycles (A -> B -> ... -> A)
         cycles = []
         try:
-            # Look for simple cycles involving account_id in local neighborhood
-            subg_nodes = set(nx.ego_graph(self.G, account_id, radius=2, undirected=False).nodes())
-            subG = self.G.subgraph(subg_nodes)
-            for cycle in nx.simple_cycles(subG):
-                if account_id in cycle and len(cycle) <= 5:
-                    cycles.append(cycle)
-                    if len(cycles) >= 3:
-                        break
+            def _find_target_cycles(target: str, max_len: int = 5, max_count: int = 3):
+                found = []
+                def _dfs(curr, path, visited):
+                    if len(path) > max_len or len(found) >= max_count:
+                        return
+                    for neighbor in self.G.successors(curr):
+                        if neighbor == target and len(path) >= 2:
+                            found.append(list(path))
+                            if len(found) >= max_count:
+                                return
+                        elif neighbor not in visited and len(path) < max_len:
+                            visited.add(neighbor)
+                            path.append(neighbor)
+                            _dfs(neighbor, path, visited)
+                            path.pop()
+                            visited.remove(neighbor)
+                            if len(found) >= max_count:
+                                return
+                _dfs(target, [target], {target})
+                return found
+
+            cycles = _find_target_cycles(account_id, max_len=5, max_count=3)
         except Exception:
             pass
 

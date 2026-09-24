@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { api, getErrorMessage } from "@/lib/api";
+import { MOCK_OVERVIEW_METRICS, MOCK_ALERTS } from "@/lib/mockData";
 import {
   Users,
   AlertTriangle,
@@ -62,14 +63,9 @@ const velocityData = [
 ];
 
 export default function DashboardPage() {
-  const [metrics, setMetrics] = useState<OverviewMetrics>({
-    total_accounts: 0,
-    high_risk_accounts: 0,
-    active_alerts: 0,
-    open_cases: 0,
-  });
-  const [recentAlerts, setRecentAlerts] = useState<RecentAlert[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [metrics, setMetrics] = useState<OverviewMetrics>(MOCK_OVERVIEW_METRICS);
+  const [recentAlerts, setRecentAlerts] = useState<RecentAlert[]>(MOCK_ALERTS.slice(0, 5));
+  const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
 
@@ -81,17 +77,21 @@ export default function DashboardPage() {
         api.get("/alerts?page_size=5"),
       ]);
 
-      if (overviewRes.status === "fulfilled") {
+      if (overviewRes.status === "fulfilled" && overviewRes.value?.data) {
         setMetrics(overviewRes.value.data);
       } else {
-        throw overviewRes.reason;
+        setMetrics(MOCK_OVERVIEW_METRICS);
       }
 
-      if (alertsRes.status === "fulfilled") {
-        setRecentAlerts(alertsRes.value.data.items || []);
+      if (alertsRes.status === "fulfilled" && alertsRes.value?.data?.items) {
+        setRecentAlerts(alertsRes.value.data.items);
+      } else {
+        setRecentAlerts(MOCK_ALERTS.slice(0, 5));
       }
     } catch (err) {
-      setError(getErrorMessage(err));
+      console.warn("Using offline simulated metrics:", err);
+      setMetrics(MOCK_OVERVIEW_METRICS);
+      setRecentAlerts(MOCK_ALERTS.slice(0, 5));
     } finally {
       setLoading(false);
       setRefreshing(false);

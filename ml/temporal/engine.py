@@ -25,13 +25,13 @@ class TemporalAnalysisEngine:
     def __init__(self):
         self.transformer_engine = TemporalTransformerEngine()
 
-    def analyze_account(self, account_id: str, df: pd.DataFrame) -> TemporalEvidence:
+    def analyze_rules(self, account_id: str, df: pd.DataFrame) -> tuple[float, list[dict], list[EvidenceItem]]:
         if df.empty or ("sender_account_id" not in df.columns and "receiver_account_id" not in df.columns):
-            return TemporalEvidence(account_id=account_id)
+            return 0.0, [], []
 
         acc_txs = df[(df["sender_account_id"] == account_id) | (df["receiver_account_id"] == account_id)].copy()
         if acc_txs.empty:
-            return TemporalEvidence(account_id=account_id)
+            return 0.0, [], []
 
         acc_txs["ts"] = pd.to_datetime(acc_txs["timestamp"])
         acc_txs = acc_txs.sort_values(by="ts")
@@ -115,11 +115,19 @@ class TemporalAnalysisEngine:
                 description=f"Detected {len(small_txs)} clustered payments structured beneath reporting limits.",
             ))
 
-        # 4. Run Transformer Sequence Model
-        trans_result = self.transformer_engine.predict_account(account_id, df)
-        t_score = trans_result["temporal_transformer_score"]
+        return score, detected, evidence_list
+
+    def blend_results(
+        self,
+        account_id: str,
+        rule_score: float,
+        detected_patterns: list[dict],
+        evidence_list: list[EvidenceItem],
+        t_score: float,
+    ) -> TemporalEvidence:
+        ev_items = list(evidence_list)
         if t_score >= 50.0:
-            evidence_list.append(EvidenceItem(
+            ev_items.append(EvidenceItem(
                 source_type=EvidenceSourceType.TEMPORAL_TRANSFORMER,
                 source_record=account_id,
                 entity_id=account_id,
@@ -132,19 +140,24 @@ class TemporalAnalysisEngine:
                 description=f"Neural sequence encoder flagged temporal flow anomaly score of {t_score}/100.",
             ))
 
-        # Blended temporal score: If no rule patterns triggered, transformer has lower weight to avoid cold-start false positives
-        if score == 0:
+        if rule_score == 0:
             final_temporal_score = min(20.0, round(t_score * 0.2, 1))
         else:
-            final_temporal_score = min(100.0, round((score * 0.65) + (t_score * 0.35), 1))
+            final_temporal_score = min(100.0, round((rule_score * 0.65) + (t_score * 0.35), 1))
         risk_level = "CRITICAL" if final_temporal_score >= 80 else "HIGH" if final_temporal_score >= 60 else "MODERATE" if final_temporal_score >= 30 else "LOW"
 
         return TemporalEvidence(
             account_id=account_id,
             temporal_score=final_temporal_score,
             transformer_score=t_score,
-            detected_patterns=detected,
-            evidence_items=evidence_list,
+            detected_patterns=detected_patterns,
+            evidence_items=ev_items,
             risk_level=risk_level,
             confidence=0.92,
         )
+
+    def analyze_account(self, account_id: str, df: pd.DataFrame) -> TemporalEvidence:
+        score, detected, evidence_list = self.analyze_rules(account_id, df)
+        trans_result = self.transformer_engine.predict_account(account_id, df)
+        t_score = trans_result["temporal_transformer_score"]
+        return self.blend_results(account_id, score, detected, evidence_list, t_score)

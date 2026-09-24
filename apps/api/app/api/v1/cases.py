@@ -12,6 +12,7 @@ from app.db.database import get_db
 from app.models.audit import Case, Alert
 from app.models.transaction import Account, Transaction
 from app.services.pipeline_orchestrator import AegisPipelineOrchestrator
+from app.services.investigation_manager import investigation_manager
 from ml.threat_memory.store import ThreatMemoryStore, ThreatPatternRecord
 
 router = APIRouter()
@@ -68,8 +69,11 @@ async def list_cases(
 
 @router.get("/cases/{case_id}")
 async def get_case(case_id: str, auth: CurrentAuth, db: AsyncSession = Depends(get_db)):
-    # Look up by case ID or case number
-    q = select(Case).where((Case.case_number == case_id) | (Case.id == case_id))
+    try:
+        val_uuid = uuid.UUID(case_id)
+        q = select(Case).where((Case.case_number == case_id) | (Case.id == val_uuid))
+    except (ValueError, AttributeError):
+        q = select(Case).where(Case.case_number == case_id)
     case = (await db.execute(q)).scalar_one_or_none()
     if not case:
         raise HTTPException(404, f"Case {case_id} not found")
@@ -86,6 +90,38 @@ async def get_case(case_id: str, auth: CurrentAuth, db: AsyncSession = Depends(g
     }
 
 
+@router.post("/cases/{case_id}/investigate/{account_id}")
+async def start_investigation_job(
+    case_id: str,
+    account_id: str,
+    auth: CurrentAuth,
+):
+    """
+    Initiates an asynchronous AEGIS multi-layer investigation job.
+    Returns immediately with job_id and initial stage states for real-time progress tracking.
+    """
+    job = investigation_manager.create_and_start_job(case_id, account_id)
+    return job.to_dict()
+
+
+@router.get("/cases/investigations/{job_id}")
+async def get_investigation_job(job_id: str, auth: CurrentAuth):
+    """Returns the real-time stage progress, timings, and result of an investigation job."""
+    job = investigation_manager.get_job(job_id)
+    if not job:
+        raise HTTPException(404, f"Investigation job {job_id} not found")
+    return job.to_dict()
+
+
+@router.post("/cases/investigations/{job_id}/cancel")
+async def cancel_investigation_job(job_id: str, auth: CurrentAuth):
+    """Safely cancels an in-flight investigation job."""
+    success = investigation_manager.cancel_job(job_id)
+    if not success:
+        raise HTTPException(404, f"Investigation job {job_id} not found")
+    return {"job_id": job_id, "status": "CANCELLED", "message": "Investigation successfully cancelled."}
+
+
 @router.get("/cases/{case_id}/investigate/{account_id}")
 async def run_investigation(
     case_id: str,
@@ -94,9 +130,7 @@ async def run_investigation(
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Executes the full end-to-end AEGIS pipeline on an account within a case context:
-    Data -> Preprocess -> Temporal (Rule+Transformer) -> Behavioral (IForest) ->
-    Graph (NetworkX) -> Fusion -> SHAP -> Verification -> Threat Memory -> Ollama -> Report
+    Executes the full end-to-end AEGIS pipeline synchronously (fallback).
     """
     txs_res = await db.execute(select(Transaction).limit(2000))
     txs = txs_res.scalars().all()
@@ -130,7 +164,11 @@ async def submit_case_feedback(
     Records human investigator feedback (TRUE_POSITIVE, FALSE_POSITIVE, NEEDS_REVIEW)
     and updates the persistent Threat Memory store for active learning.
     """
-    q = select(Case).where((Case.case_number == case_id) | (Case.id == case_id))
+    try:
+        val_uuid = uuid.UUID(case_id)
+        q = select(Case).where((Case.case_number == case_id) | (Case.id == val_uuid))
+    except (ValueError, AttributeError):
+        q = select(Case).where(Case.case_number == case_id)
     case = (await db.execute(q)).scalar_one_or_none()
     if not case:
         raise HTTPException(404, f"Case {case_id} not found")

@@ -100,6 +100,9 @@ async def refresh(body: RefreshRequest, db: AsyncSession = Depends(get_db)):
     except Exception:
         raise HTTPException(status_code=401, detail="Invalid refresh token")
 
+    if payload.get("type") != "refresh":
+        raise HTTPException(status_code=401, detail="Invalid token type for refresh")
+
     user_id = payload.get("sub")
     if not user_id:
         raise HTTPException(status_code=401, detail="Invalid token subject")

@@ -65,7 +65,7 @@ async def list_alerts(
                 "entity_id": a.entity_id,
                 "risk_score": a.risk_score,
                 "risk_level": a.risk_level,
-                "created_at": a.created_at.isoformat(),
+                "created_at": a.created_at.isoformat() if a.created_at else None,
             }
             for a in items
         ],

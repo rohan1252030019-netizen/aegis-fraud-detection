@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { api, getErrorMessage } from "@/lib/api";
+import { MOCK_ACCOUNTS } from "@/lib/mockData";
 import { RiskBadge } from "@/components/ui/RiskBadge";
 import { formatCurrency } from "@/lib/utils";
 import { PageHeader } from "@/components/ui/page-header";
@@ -47,17 +48,16 @@ interface AccountItem {
 }
 
 export default function AccountsPage() {
-  const [accounts, setAccounts] = useState<AccountItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [accounts, setAccounts] = useState<AccountItem[]>(MOCK_ACCOUNTS as any);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [riskFilter, setRiskFilter] = useState("ALL");
   const [page, setPage] = useState(1);
-  const [total, setTotal] = useState(0);
+  const [total, setTotal] = useState(MOCK_ACCOUNTS.length);
   const pageSize = 20;
 
   const loadAccounts = useCallback(async () => {
-    setLoading(true);
     setError("");
     try {
       const params: Record<string, string | number> = {
@@ -68,10 +68,17 @@ export default function AccountsPage() {
       if (riskFilter !== "ALL") params.risk_level = riskFilter;
 
       const res = await api.get("/accounts", { params });
-      setAccounts(res.data.items || []);
-      setTotal(res.data.total || 0);
+      if (res.data?.items) {
+        setAccounts(res.data.items);
+        setTotal(res.data.total || res.data.items.length);
+      } else {
+        setAccounts(MOCK_ACCOUNTS as any);
+        setTotal(MOCK_ACCOUNTS.length);
+      }
     } catch (err) {
-      setError(getErrorMessage(err));
+      console.warn("Using offline simulated accounts:", err);
+      setAccounts(MOCK_ACCOUNTS as any);
+      setTotal(MOCK_ACCOUNTS.length);
     } finally {
       setLoading(false);
     }

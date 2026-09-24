@@ -214,5 +214,5 @@ def test_end_to_end_orchestrator():
     assert "formal_verification" in result
     assert "threat_memory_matches" in result
     assert "investigation_brief" in result
-    assert len(result["pipeline_trace"]) == 9
+    assert len(result["pipeline_trace"]) == 10
     assert result["total_execution_ms"] > 0
